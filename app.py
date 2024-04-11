@@ -1,7 +1,6 @@
 import streamlit as st
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import google.generativeai as palm
 from langchain.embeddings import GooglePalmEmbeddings
 from langchain.llms import GooglePalm
 from langchain.vectorstores import FAISS
@@ -10,7 +9,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain_google_genai import GoogleGenerativeAI
 import os
 
-os.environ['GOOGLE_API_KEY'] =  'AIzaSyCOGmVbjWymawU3OJNAWh12OAJwcY7k6Yo'
+os.environ['GOOGLE_API_KEY'] =  'AIzaSyBgoT3Fe6eGBcGzDcjS6AzATFUggg6sNB4'
 
 def get_pdf_text(pdf_docs):
     text=""
@@ -31,21 +30,26 @@ def get_vector_store(text_chunks):
     return vector_store
 
 def get_conversational_chain(vector_store):
-    llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyCOGmVbjWymawU3OJNAWh12OAJwcY7k6Yo', temperature=0.1)
+    llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyBgoT3Fe6eGBcGzDcjS6AzATFUggg6sNB4', temperature=0.1)
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     conversation_chain = ConversationalRetrievalChain.from_llm(llm=llm, retriever=vector_store.as_retriever(), memory=memory)
     print(conversation_chain)  # Add this line for debugging
     return conversation_chain
 
-
 def user_input(user_question):
-    response = st.session_state.conversation({'question': user_question})
-    st.session_state.chatHistory = response['chat_history']
-    for i, message in enumerate(st.session_state.chatHistory):
-        if i%2 == 0:
-            st.write("Human: ", message.content)
-        else:
-            st.write("Bot: ", message.content)
+    print("Conversation Chain:", st.session_state.conversation)  # Debugging print
+    if st.session_state.conversation is not None:
+        response = st.session_state.conversation({'question': user_question})
+        st.session_state.chatHistory = response['chat_history']
+        for i, message in enumerate(st.session_state.chatHistory):
+            if i % 2 == 0:
+                st.write("Human: ", message.content)
+            else:
+                st.write("Bot: ", message.content)
+    else:
+        st.write("Error: Conversation chain not initialized.")
+
+
 def main():
     st.set_page_config("MultiDocs Chatbot")
     st.header("MultiDocs Chatbot 💬")
